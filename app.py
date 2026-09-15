@@ -13,6 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
 # --------------------------------------------------
 # CUSTOM CSS
 # --------------------------------------------------
@@ -20,19 +21,16 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-.main {
-    padding-top: 1rem;
-}
-
 .block-container {
     padding-top: 2rem;
     padding-bottom: 2rem;
     max-width: 1200px;
 }
 
-/* Header */
+/* Hero Header */
+
 .hero {
-    padding: 28px;
+    padding: 30px;
     border-radius: 18px;
     background: linear-gradient(135deg, #1f4e79, #2563eb);
     color: white;
@@ -49,7 +47,9 @@ st.markdown("""
     opacity: 0.9;
 }
 
-/* Section headings */
+
+/* Section Titles */
+
 .section-title {
     font-size: 24px;
     font-weight: 700;
@@ -57,27 +57,38 @@ st.markdown("""
     margin-bottom: 15px;
 }
 
-/* Result cards */
+
+/* Result Card */
+
 .result-card {
     padding: 25px;
     border-radius: 18px;
     text-align: center;
-    margin-top: 15px;
-    border: 1px solid rgba(0,0,0,0.08);
+    border: 1px solid rgba(128,128,128,0.25);
+    margin-bottom: 15px;
 }
 
 .result-title {
-    font-size: 28px;
+    font-size: 27px;
     font-weight: 700;
     margin-bottom: 8px;
 }
 
-.result-probability {
-    font-size: 42px;
-    font-weight: 800;
+
+/* Risk Badge */
+
+.risk-badge {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
 }
 
-/* Info cards */
+
+/* Info Cards */
+
 .info-card {
     padding: 18px;
     border-radius: 15px;
@@ -95,17 +106,9 @@ st.markdown("""
     font-weight: 700;
 }
 
-/* Risk badge */
-.risk-badge {
-    display: inline-block;
-    padding: 8px 18px;
-    border-radius: 30px;
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 12px;
-}
 
 /* Footer */
+
 .footer {
     text-align: center;
     opacity: 0.65;
@@ -115,6 +118,17 @@ st.markdown("""
 
 </style>
 """, unsafe_allow_html=True)
+
+
+# --------------------------------------------------
+# SESSION STATE FOR RESET
+# --------------------------------------------------
+
+if "reset_counter" not in st.session_state:
+    st.session_state.reset_counter = 0
+
+
+reset_key = st.session_state.reset_counter
 
 
 # --------------------------------------------------
@@ -157,7 +171,7 @@ with st.sidebar:
     st.markdown("### 📊 Selected Features")
 
     st.write("• Monthly Income")
-    st.write("• Overtime")
+    st.write("• OverTime")
     st.write("• Years at Company")
     st.write("• Total Working Years")
     st.write("• Age")
@@ -216,6 +230,7 @@ with col1:
         max_value=60,
         value=30,
         step=1,
+        key=f"age_{reset_key}",
         help="Employee age in years."
     )
 
@@ -225,12 +240,14 @@ with col1:
         max_value=50000,
         value=5000,
         step=100,
+        key=f"income_{reset_key}",
         help="Employee monthly income."
     )
 
     overtime = st.selectbox(
         "OverTime",
         ["No", "Yes"],
+        key=f"overtime_{reset_key}",
         help="Whether the employee works overtime."
     )
 
@@ -243,6 +260,7 @@ with col2:
         max_value=50,
         value=5,
         step=1,
+        key=f"company_years_{reset_key}",
         help="Number of years the employee has worked at the company."
     )
 
@@ -252,6 +270,7 @@ with col2:
         max_value=50,
         value=8,
         step=1,
+        key=f"total_years_{reset_key}",
         help="Total professional working experience."
     )
 
@@ -261,6 +280,7 @@ with col2:
         max_value=30,
         value=3,
         step=1,
+        key=f"manager_years_{reset_key}",
         help="Number of years working with the current manager."
     )
 
@@ -269,7 +289,7 @@ st.markdown("---")
 
 
 # --------------------------------------------------
-# INPUT SUMMARY
+# EMPLOYEE PROFILE
 # --------------------------------------------------
 
 st.markdown(
@@ -281,16 +301,31 @@ summary1, summary2, summary3, summary4 = st.columns(4)
 
 
 with summary1:
-    st.metric("Age", f"{age} years")
+    st.metric(
+        "Age",
+        f"{age} years"
+    )
+
 
 with summary2:
-    st.metric("Monthly Income", f"₹{monthly_income:,}")
+    st.metric(
+        "Monthly Income",
+        f"₹{monthly_income:,}"
+    )
+
 
 with summary3:
-    st.metric("Company Experience", f"{years_at_company} years")
+    st.metric(
+        "Company Experience",
+        f"{years_at_company} years"
+    )
+
 
 with summary4:
-    st.metric("OverTime", overtime)
+    st.metric(
+        "OverTime",
+        overtime
+    )
 
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -320,7 +355,13 @@ with reset_col:
     )
 
 
+# --------------------------------------------------
+# RESET
+# --------------------------------------------------
+
 if reset_button:
+
+    st.session_state.reset_counter += 1
 
     st.rerun()
 
@@ -331,12 +372,15 @@ if reset_button:
 
 if predict_button:
 
-    # Validation
+    # ----------------------------------------------
+    # VALIDATION
+    # ----------------------------------------------
 
     if years_at_company > total_working_years:
 
         st.error(
-            "❌ Years at Company cannot be greater than Total Working Years."
+            "❌ Years at Company cannot be greater than "
+            "Total Working Years."
         )
 
         st.stop()
@@ -345,18 +389,23 @@ if predict_button:
     if years_with_manager > years_at_company:
 
         st.error(
-            "❌ Years With Current Manager cannot be greater than Years at Company."
+            "❌ Years With Current Manager cannot be greater "
+            "than Years at Company."
         )
 
         st.stop()
 
 
-    # Convert overtime
+    # ----------------------------------------------
+    # OVERTIME CONVERSION
+    # ----------------------------------------------
 
     overtime_value = 1 if overtime == "Yes" else 0
 
 
-    # Create employee dataframe
+    # ----------------------------------------------
+    # CREATE EMPLOYEE DATA
+    # ----------------------------------------------
 
     new_employee = pd.DataFrame([{
 
@@ -375,12 +424,16 @@ if predict_button:
     }])
 
 
-    # Arrange features exactly like training
+    # ----------------------------------------------
+    # ARRANGE FEATURES
+    # ----------------------------------------------
 
     new_employee = new_employee[features]
 
 
-    # Prediction
+    # ----------------------------------------------
+    # MODEL PREDICTION
+    # ----------------------------------------------
 
     prediction = model.predict(new_employee)[0]
 
@@ -389,32 +442,29 @@ if predict_button:
     probability_percent = probability * 100
 
 
-    # --------------------------------------------------
+    # ----------------------------------------------
     # RISK LEVEL
-    # --------------------------------------------------
+    # ----------------------------------------------
 
     if probability_percent < 30:
 
         risk_level = "LOW RISK"
-
         risk_icon = "🟢"
 
     elif probability_percent < 60:
 
         risk_level = "MEDIUM RISK"
-
         risk_icon = "🟡"
 
     else:
 
         risk_level = "HIGH RISK"
-
         risk_icon = "🔴"
 
 
-    # --------------------------------------------------
-    # RESULT SECTION
-    # --------------------------------------------------
+    # ----------------------------------------------
+    # RESULT
+    # ----------------------------------------------
 
     st.markdown("---")
 
@@ -424,8 +474,12 @@ if predict_button:
     )
 
 
-    result_col1, result_col2 = st.columns([1, 1])
+    result_col1, result_col2 = st.columns(2)
 
+
+    # ----------------------------------------------
+    # PREDICTION CARD
+    # ----------------------------------------------
 
     with result_col1:
 
@@ -444,7 +498,8 @@ if predict_button:
                 </div>
 
                 <p>
-                The model estimates a higher likelihood of employee attrition.
+                The model estimates a higher likelihood
+                of employee attrition.
                 </p>
 
                 </div>
@@ -467,7 +522,8 @@ if predict_button:
                 </div>
 
                 <p>
-                The model estimates a lower likelihood of employee attrition.
+                The model estimates a lower likelihood
+                of employee attrition.
                 </p>
 
                 </div>
@@ -476,14 +532,20 @@ if predict_button:
             )
 
 
+    # ----------------------------------------------
+    # PROBABILITY
+    # ----------------------------------------------
+
     with result_col2:
 
         st.markdown(
             """
             <div class="result-card">
+
             <div class="info-label">
             ATTRITION PROBABILITY
             </div>
+
             </div>
             """,
             unsafe_allow_html=True
@@ -494,42 +556,38 @@ if predict_button:
             f"{probability_percent:.2f}%"
         )
 
-        st.progress(
-            probability
-        )
+        st.progress(probability)
 
 
-    # --------------------------------------------------
+    # ----------------------------------------------
     # INTERPRETATION
-    # --------------------------------------------------
-
-    st.markdown("<br>", unsafe_allow_html=True)
+    # ----------------------------------------------
 
     if probability_percent < 30:
 
         st.info(
-            "💡 **Interpretation:** The employee has a relatively low "
-            "predicted probability of leaving."
+            "💡 **Interpretation:** The employee has a relatively "
+            "low predicted probability of leaving."
         )
 
     elif probability_percent < 60:
 
         st.warning(
-            "💡 **Interpretation:** The employee falls into a moderate "
-            "attrition-risk range and may require attention."
+            "💡 **Interpretation:** The employee falls into a "
+            "moderate attrition-risk range and may require attention."
         )
 
     else:
 
         st.error(
-            "💡 **Interpretation:** The employee has a relatively high "
-            "predicted probability of leaving."
+            "💡 **Interpretation:** The employee has a relatively "
+            "high predicted probability of leaving."
         )
 
 
-    # --------------------------------------------------
-    # IMPORTANT FACTORS
-    # --------------------------------------------------
+    # ----------------------------------------------
+    # MODEL INPUT FACTORS
+    # ----------------------------------------------
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -537,6 +595,7 @@ if predict_button:
         '<div class="section-title">🔍 Model Input Factors</div>',
         unsafe_allow_html=True
     )
+
 
     factor1, factor2, factor3 = st.columns(3)
 
@@ -601,10 +660,14 @@ if predict_button:
         )
 
 
+    # ----------------------------------------------
+    # DISCLAIMER
+    # ----------------------------------------------
+
     st.caption(
-        "⚠️ This prediction is a machine learning estimate and should "
-        "be used as a decision-support signal rather than the sole basis "
-        "for HR decisions."
+        "⚠️ This prediction is a machine learning estimate and "
+        "should be used as a decision-support signal rather than "
+        "the sole basis for HR decisions."
     )
 
 
